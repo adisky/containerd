@@ -369,9 +369,6 @@ func (c *criService) registryHosts(auth *runtime.AuthConfig) docker.RegistryHost
 
 // defaultScheme returns the default scheme for a registry host.
 func defaultScheme(host string) string {
-	if h, _, err := net.SplitHostPort(host); err == nil {
-		host = h
-	}
 	if isLocalHost(host) {
 		return "http"
 	}
@@ -383,10 +380,13 @@ func isLocalHost(host string) bool {
 	if h, _, err := net.SplitHostPort(host); err == nil {
 		host = h
 	}
-	if host == "localhost" || host == "127.0.0.1" || host == "::1" {
-		return true
+
+	if host == "localhost" {
+		host = "127.0.0.1"
 	}
-	return false
+
+	ip := net.ParseIP(host)
+	return ip.IsLoopback()
 }
 
 // addDefaultScheme returns the endpoint with default scheme
